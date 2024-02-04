@@ -4,26 +4,37 @@ import { Router, RouterModule } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import { fakeListings, fakeMyListings } from '../fake-data';
 import { Listing } from '../types';
+import { ListingsService } from '../listings.service';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-edit-listing-page',
   standalone: true,
-  imports: [ListingDataFormComponent, RouterModule],
+  imports: [ListingDataFormComponent, RouterModule, NgIf],
   templateUrl: './edit-listing-page.component.html',
   styleUrl: './edit-listing-page.component.css',
 })
 export class EditListingPageComponent {
   listing: Listing;
 
-  constructor(private router: Router, private route: ActivatedRoute) {}
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private listingsService: ListingsService
+  ) {}
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
-    this.listing = fakeMyListings.find((listing) => listing.id === id);
+    this.listingsService
+      .getListingById(id)
+      .subscribe((listing) => (this.listing = listing));
   }
 
-  onSubmit(): void {
-    alert('Saving changes to the listing...');
-    this.router.navigateByUrl('/my-listings');
+  onSubmit({ name, description, price }): void {
+    this.listingsService
+      .editListing(this.listing.id, name, description, price)
+      .subscribe(() => {
+        this.router.navigateByUrl('/my-listings');
+      });
   }
 }
